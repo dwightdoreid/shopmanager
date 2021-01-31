@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>ShopManager</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+  <img src="images/GCSMLogo.png" width="80px" height="80px" class="center" alt="GCSM Logo">
+  <h1>Welcome to GreenCheque's ShopManager</h1>
+  <h3 id="con_try">Please wait while you are connected to the shop's database...</h3>
+  <h3 id="con_failed" style="visibility: hidden;">Could not connect to database. Please contact your GreenCheque system
+    administrator</h3>
+  <div id="loader" class="loader"></div>
+  <p></p>
+</body>
+<script>
+  const timeout = (time, promise) => {
+    return new Promise(function (resolve, reject) {
+      setTimeout(() => {
+        reject(new Error('Request timed out.'))
+      }, time);
+      promise.then(resolve, reject);
+    });
+  }
+
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+
+  // Our timeout function
+  const url = "http://localhost/wordpress/wp-json";
+  // const data = {};
+  timeout(120000, fetch(url, {
+      signal: signal
+    }))
+    .then(response => {
+      console.log(response.status);
+      console.log("Good to go, loading login screen...");
+      window.location = "http://localhost/wordpress/login";
+    })
+    .catch(error => {
+      // Error Log
+      console.log("Something went wrong");
+      console.error(error);
+      setTimeout(function () {
+        console.log("Trying again...");
+        timeout(120000, fetch(url, {
+            signal: signal
+          }))
+          .then(response => {
+            console.log(response.status);
+            console.log("Good to go, loading login screen...");
+            window.location = "http://localhost/wordpress/login";
+          })
+          .catch(error => {
+            controller.abort();
+            document.getElementById("loader").style.visibility = "hidden";
+            document.getElementById("con_try").style.visibility = "hidden";
+            document.getElementById("con_failed").style.visibility = "visible";
+          })
+      }, 120000);      
+
+    });
+</script>
+
+</html>
